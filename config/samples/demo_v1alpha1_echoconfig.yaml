@@ -4,4 +4,4 @@ metadata:
   name: hello
   namespace: default
 spec:
-  message: "Hello from VeeEchoConfig!"
+  message: "Hello from EchoConfig!"
