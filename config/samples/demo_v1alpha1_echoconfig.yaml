@@ -1,0 +1,7 @@
+apiVersion: demo.deet.dev/v1alpha1
+kind: EchoConfig
+metadata:
+  name: hello
+  namespace: default
+spec:
+  message: "Hello from VeeEchoConfig!"
