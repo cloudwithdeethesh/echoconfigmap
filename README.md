@@ -42,7 +42,7 @@ data:
 - **Controller:** Watches for `EchoConfig` objects and reconciles the desired state by creating/updating a ConfigMap.  
 
 Analogy:  
-> A CRD without a controller is like a **boat without someone rowing it** — it just floats.  
+> A CRD without a controller is like a **boat without someone rowing it** , it just floats.  
 > The Controller is the rower who makes it move.  
 
 ---
