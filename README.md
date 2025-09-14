@@ -1,135 +1,121 @@
-# echoconfigmap
-// TODO(user): Add simple overview of use/purpose
+# EchoConfig Operator
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This is a simple Kubernetes Operator built with [Kubebuilder](https://book.kubebuilder.io/).  
+It demonstrates how to extend the Kubernetes API with a **Custom Resource Definition (CRD)** and a **Controller**.
 
-## Getting Started
+---
 
-### Prerequisites
-- go version v1.24.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+## 🚀 What it Does
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+- Defines a custom resource **EchoConfig** (`echoconfigs.demo.deet.dev/v1alpha1`).
+- For each `EchoConfig`, the controller:
+  - Creates/updates a `ConfigMap` named `echo-<name>` in the same namespace.
+  - Writes the CR’s `spec.message` into `data.message` of the ConfigMap.
+- Updates CR `status` with the name of the managed ConfigMap.
 
-```sh
-make docker-build docker-push IMG=<some-registry>/echoconfigmap:tag
+👉 Example:  
+```yaml
+apiVersion: demo.deet.dev/v1alpha1
+kind: EchoConfig
+metadata:
+  name: hello
+spec:
+  message: "Hello from Deet!"
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
+Produces this ConfigMap automatically:  
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echo-hello
+  namespace: default
+data:
+  message: "Hello from Deet!"
+```
 
-**Install the CRDs into the cluster:**
+---
 
-```sh
+## ⚙️ How it Works
+
+- **CRD (Custom Resource Definition):** Declares a new Kubernetes resource type (`EchoConfig`) with `spec.message` and `status.configMapName`.  
+- **Controller:** Watches for `EchoConfig` objects and reconciles the desired state by creating/updating a ConfigMap.  
+
+Analogy:  
+> A CRD without a controller is like a **boat without someone rowing it** — it just floats.  
+> The Controller is the rower who makes it move.  
+
+---
+
+## 🛠️ Prerequisites
+
+- Go 1.21+  
+- [Kubebuilder](https://book.kubebuilder.io/quick-start.html)  
+- Access to a Kubernetes cluster  
+- Docker Hub account (for building/pushing images)  
+
+---
+
+## 📝 Development Workflow
+
+### 1. Clone and Init
+```bash
+git clone https://github.com/cloudwithdeethesh/echoconfigmap.git
+cd echoconfigmap
+```
+
+### 2. Install CRD into your cluster
+```bash
 make install
 ```
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
-
-```sh
-make deploy IMG=<some-registry>/echoconfigmap:tag
+### 3. Run controller locally
+```bash
+make run
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
-
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
-
-```sh
-kubectl apply -k config/samples/
+### 4. Apply a sample EchoConfig
+```bash
+kubectl apply -f config/samples/demo_v1alpha1_echoconfig.yaml
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
-
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
+Check the ConfigMap:
+```bash
+kubectl get configmap echo-hello -o yaml
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
+---
 
-```sh
-make uninstall
+## 📦 Deploy as Kubernetes Deployment
+
+To run this controller inside Kubernetes:
+
+1. Build & push the image:
+```bash
+export IMG=docker.io/cloudwithdeethesh/echoconfigmap:v0.1.0
+make docker-build IMG=$IMG
+make docker-push IMG=$IMG
 ```
 
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
+2. Deploy the controller:
+```bash
+make deploy IMG=$IMG
 ```
 
-## Project Distribution
+Now the operator runs in your cluster as a Deployment, watching for `EchoConfig` resources.
 
-Following the options to release and provide this solution to the users.
+---
 
-### By providing a bundle with all YAML files
+## 🔑 Takeaway
 
-1. Build the installer for the image built and published in the registry:
+This project shows the **building blocks of Kubernetes Operators**:
+- CRDs let you define new Kubernetes resource types.
+- Controllers continuously reconcile those resources into real-world changes.
+- Together, they extend Kubernetes with custom APIs.
 
-```sh
-make build-installer IMG=<some-registry>/echoconfigmap:tag
-```
+---
 
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
+## 📚 References
 
-2. Using the installer
-
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/echoconfigmap/<tag or branch>/dist/install.yaml
-```
-
-### By providing a Helm Chart
-
-1. Build the chart using the optional helm plugin
-
-```sh
-kubebuilder edit --plugins=helm/v1-alpha
-```
-
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
-
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
-
-## License
-
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+- [Kubebuilder Book](https://book.kubebuilder.io/)  
+- [Kubernetes Operator Pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)  
